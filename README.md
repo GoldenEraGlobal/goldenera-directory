@@ -1,0 +1,94 @@
+# goldenera-directory
+
+**goldenera-directory** is a centralized discovery service for nodes in the GoldenEra blockchain network. 
+
+Each node pings this directory server to register itself. The directory server stores all active nodes and distributes their addresses back to the nodes so they can connect to each other via the P2P layer.
+
+---
+
+## Prerequisites
+
+1. **Install Docker**: https://www.docker.com/
+2. **Create a directory** for the directory server and navigate to it:
+   ```bash
+   mkdir goldenera-directory
+   cd goldenera-directory
+   ```
+
+---
+
+## Usage
+
+Create a `docker-compose.yml` file:
+
+```yaml
+services:
+  directory:
+    image: ghcr.io/goldeneraglobal/goldenera-directory:latest
+    container_name: goldenera_directory
+    restart: unless-stopped
+    pull_policy: always
+    env_file:
+      - .env
+    environment:
+      - LOGGING_FILE=${LOGGING_FILE:-directory.log}
+    ports:
+      - "${LISTEN_PORT:-8080}:8080"
+    volumes:
+      - ./directory_data:/app/data
+      - ${LOGGING_DIR:-./directory_logs}:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: "2.0"
+        reservations:
+          memory: 2G
+```
+
+Create a `.env` file:
+
+```bash
+# Spring profile
+SPRING_PROFILES_ACTIVE="prod"
+
+# Directory URL
+LISTEN_URL="http://localhost"
+LISTEN_PORT=8080
+
+# SSL
+SSL_ENABLED=false
+SSL_KEY_STORE=
+SSL_KEY_STORE_PASSWORD=
+SSL_FORCE_REDIRECT_TO_HTTPS=false
+
+# Directory identity file
+IDENTITY_FILE="./directory_data/.directory_identity"
+
+# Directory
+MAX_REQUESTS_PER_IP_ADDRESS_PER_MINUTE=10
+DELETE_INACTIVE_NODE_AFTER_SECONDS=60
+
+# Admin area
+ADMIN_ACCESS_TOKEN="abc123"
+
+# Logging
+LOGGING_DIR="./directory_logs"
+LOGGING_FILE="goldenera.log"
+
+# Logging level
+LOGGING_LEVEL_ROOT=INFO
+LOGGING_LEVEL_GLOBAL_GOLDENERA=INFO
+```
+
+Run:
+
+```bash
+docker compose up -d
+```
+
+---
+
+## License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.

@@ -9,6 +9,7 @@ LOG_DIR="${APP_HOME}/logs"
 DATA_DIR="${APP_HOME}/data"
 OVERRIDES_DIR="${APP_HOME}/overrides"
 APP_JAR="${APP_HOME}/app.jar"
+JAVA_BIN="${JAVA_HOME:-/opt/java/openjdk}/bin/java"
 
 echo ">>> [BOOT] GoldenEra Directory Service Initialization"
 
@@ -27,8 +28,9 @@ chown -R directory:directory "$OVERRIDES_DIR"
 # 2. START APPLICATION
 # ==============================================================================
 echo ">>> [BOOT] Launching Java Application..."
+echo ">>> [INFO] Using Java at: $JAVA_BIN"
 
-exec su -s /bin/bash directory -c "java \
+exec su -s /bin/bash directory -c "$JAVA_BIN \
   -server \
   -XX:+UseZGC \
   -XX:+ZGenerational \

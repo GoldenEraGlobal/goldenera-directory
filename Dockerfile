@@ -3,10 +3,12 @@
 # ==============================================================================
 FROM eclipse-temurin:21-jdk-jammy AS app-builder
 
+# ARG for cache invalidation strategies
 ARG GITHUB_ACTOR
 
 WORKDIR /app
 
+# Copy Maven wrapper and configuration first to optimize layer caching
 COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
 RUN chmod +x mvnw
@@ -21,7 +23,6 @@ RUN echo "<settings><servers>" > settings.xml && \
 
 # Resolve dependencies
 RUN --mount=type=secret,id=github_token \
-    --mount=type=cache,target=/root/.m2 \
     export GITHUB_TOKEN=$(cat /run/secrets/github_token) && \
     ./mvnw dependency:go-offline -s settings.xml || true
 
@@ -41,14 +42,17 @@ FROM eclipse-temurin:21-jdk-jammy
 ENV APP_HOME=/app
 ENV APP_DATA_DIR=/app/directory_data
 
+# Create a dedicated system user for security
 RUN groupadd -r directory && useradd -r -g directory -d ${APP_HOME} -s /sbin/nologin directory
 
 WORKDIR ${APP_HOME}
 
+# Copy the built artifact from the builder stage
 COPY --from=app-builder /app/target/*.jar ${APP_HOME}/app.jar
 COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+# Create directories with correct permissions
 RUN mkdir -p ${APP_HOME}/overrides \
     && mkdir -p ${APP_HOME}/directory_logs \
     && mkdir -p ${APP_HOME}/directory_data \

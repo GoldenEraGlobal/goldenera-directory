@@ -11,6 +11,7 @@ COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
 RUN chmod +x mvnw
 
+# Settings XML generation
 RUN echo "<settings><servers>" > settings.xml && \
     echo "  <server><id>github-merkletrie</id><username>${GITHUB_ACTOR}</username><password>\${env.GITHUB_TOKEN}</password></server>" >> settings.xml && \
     echo "  <server><id>github-rlp</id><username>${GITHUB_ACTOR}</username><password>\${env.GITHUB_TOKEN}</password></server>" >> settings.xml && \
@@ -18,11 +19,13 @@ RUN echo "<settings><servers>" > settings.xml && \
     echo "  <server><id>github</id><username>${GITHUB_ACTOR}</username><password>\${env.GITHUB_TOKEN}</password></server>" >> settings.xml && \
     echo "</servers></settings>" >> settings.xml
 
+# Resolve dependencies
 RUN --mount=type=secret,id=github_token \
     --mount=type=cache,target=/root/.m2 \
     export GITHUB_TOKEN=$(cat /run/secrets/github_token) && \
     ./mvnw dependency:go-offline -s settings.xml || true
 
+# Build Package
 COPY src ./src
 
 RUN --mount=type=secret,id=github_token \
@@ -38,12 +41,17 @@ FROM eclipse-temurin:21-jdk-jammy
 ENV APP_HOME=/app
 ENV APP_DATA_DIR=/app/data
 
-WORKDIR ${APP_HOME}
-
+# 1. User Setup
 RUN groupadd -r directory && useradd -r -g directory -d ${APP_HOME} -s /sbin/nologin directory
 
-COPY --from=app-builder /app/target/*.jar ${APP_HOME}/app.jar
+WORKDIR ${APP_HOME}
 
+# 2. Copy Artifacts
+COPY --from=app-builder /app/target/*.jar ${APP_HOME}/app.jar
+COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# 3. Structure & Permissions (Initial setup)
 RUN mkdir -p ${APP_HOME}/overrides \
     && mkdir -p ${APP_HOME}/logs \
     && mkdir -p ${APP_HOME}/data \
@@ -52,21 +60,4 @@ RUN mkdir -p ${APP_HOME}/overrides \
 EXPOSE 8080 443 80
 VOLUME ["/app/data", "/app/logs"]
 
-USER directory
-
-ENTRYPOINT ["java", \
-  "-server", \
-  "-XX:+UseZGC", \
-  "-XX:+ZGenerational", \
-  "-XX:MaxRAMPercentage=80.0", \
-  "-XX:MaxMetaspaceSize=384m", \
-  "-Xss512k", \
-  "-XX:+UseStringDeduplication", \
-  "-XX:+ExitOnOutOfMemoryError", \
-  "-XX:CICompilerCount=2", \
-  "-Djava.awt.headless=true", \
-  "-Djava.net.preferIPv4Stack=true", \
-  "-DAPP_DATA_DIR=/app/data", \
-  "-Djava.security.egd=file:/dev/./urandom", \
-  "-cp", "/app/overrides:/app/app.jar", \
-  "org.springframework.boot.loader.launch.JarLauncher"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

@@ -1,0 +1,22 @@
+services:
+  directory:
+    image: ghcr.io/goldeneraglobal/goldenera-directory:latest
+    container_name: goldenera_directory
+    restart: unless-stopped
+    pull_policy: always
+    env_file:
+      - .env
+    environment:
+      - LOGGING_FILE=${LOGGING_FILE:-directory.log}
+    ports:
+      - "${LISTEN_PORT:-8080}:8080"
+    volumes:
+      - ./directory_data:/app/data
+      - ${LOGGING_DIR:-./directory_logs}:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: "2.0"
+        reservations:
+          memory: 2G

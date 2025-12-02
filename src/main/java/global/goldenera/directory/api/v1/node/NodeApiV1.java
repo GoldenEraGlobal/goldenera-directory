@@ -1,0 +1,67 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2025-2030 The GoldenEraGlobal Developers
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+package global.goldenera.directory.api.v1.node;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import global.goldenera.cryptoj.enums.Network;
+import global.goldenera.directory.api.v1.node.dtos.NodePingDtoV1;
+import global.goldenera.directory.api.v1.node.dtos.NodePongDtoV1;
+import global.goldenera.directory.exceptions.GEAuthenticationException;
+import global.goldenera.directory.services.business.NodeBusinessService;
+import global.goldenera.directory.properties.PropertiesGeneralConfig;
+import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
+
+import static lombok.AccessLevel.PRIVATE;
+
+@RestController
+@AllArgsConstructor
+@RequestMapping(value = "/api/v1/node")
+@FieldDefaults(level = PRIVATE, makeFinal = true)
+public class NodeApiV1 {
+
+	PropertiesGeneralConfig propertiesGeneralConfig;
+	NodeBusinessService nodeBusinessService;
+
+	@PostMapping("ping")
+	public NodePongDtoV1 ping(@RequestBody NodePingDtoV1 nodePingDto) {
+		return nodeBusinessService.handlePing(nodePingDto);
+	}
+
+	@GetMapping("peers")
+	public NodePongDtoV1 getPeers(@RequestHeader(required = true, name = "X-Access-Token") String accessToken,
+			@RequestParam(value = "network", required = false) Network network) {
+		if (!accessToken.equals(propertiesGeneralConfig.getApiAccessToken())) {
+			throw new GEAuthenticationException("Invalid authorization header");
+		}
+		return nodeBusinessService.buildPong(network);
+	}
+}

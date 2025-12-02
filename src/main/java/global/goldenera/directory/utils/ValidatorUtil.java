@@ -23,8 +23,14 @@
  */
 package global.goldenera.directory.utils;
 
-import global.goldenera.directory.exceptions.GEValidationException;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URL;
 
+import global.goldenera.directory.exceptions.GEValidationException;
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class ValidatorUtil {
 
     public static String isNullOrEmpty(String value) throws GEValidationException {
@@ -32,5 +38,59 @@ public class ValidatorUtil {
             throw new GEValidationException("Value cannot be null or empty.");
         }
         return value;
+    }
+
+    @UtilityClass
+    public static class Url {
+        public static String url(String url) throws GEValidationException {
+            url = isNullOrEmpty(url);
+
+            try {
+                URI uri = new URI(url);
+                String scheme = uri.getScheme();
+                String host = uri.getHost();
+
+                if (scheme == null || !(scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))) {
+                    throw new GEValidationException("URL must start with 'http://' or 'https://'.");
+                }
+
+                if (host == null || host.isBlank()) {
+                    throw new GEValidationException(
+                            "URL '" + url + "' does not contain a valid host.");
+                }
+                return url;
+            } catch (java.net.URISyntaxException e) {
+                throw new GEValidationException("URL '" + url + "' is not valid.", e);
+            } catch (Exception e) {
+                throw new GEValidationException("Validation of URL '" + url + "' failed.", e);
+            }
+        }
+
+        public static boolean isSafe(String urlStr) {
+            try {
+                URL url = new URL(urlStr);
+                return isSafe(url.getHost());
+            } catch (Exception e) {
+                return false;
+            }
+        }
+    }
+
+    @UtilityClass
+    public static class IpAddress {
+        public static boolean isSafe(String str) {
+            try {
+                InetAddress address = InetAddress.getByName(str);
+                if (address.isLoopbackAddress() || address.isLinkLocalAddress() || address.isSiteLocalAddress()) {
+                    return false;
+                }
+                if (address.getHostAddress().equals("169.254.169.254")) {
+                    return false;
+                }
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
     }
 }

@@ -43,6 +43,7 @@ import global.goldenera.directory.exceptions.GEValidationException;
 import global.goldenera.directory.properties.PropertiesGeneralConfig;
 import global.goldenera.directory.services.system.IdentityService;
 import global.goldenera.directory.utils.RlpEncoderUtil;
+import global.goldenera.directory.utils.ValidatorUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
@@ -77,6 +78,10 @@ public class NodeBusinessService {
 	}
 
 	public NodePongDtoV1 handlePing(NodePingDtoV1 request) {
+		if (!ValidatorUtil.IpAddress.isSafe(request.getP2pListenHost())) {
+			log.warn("Invalid IP address for incoming ping. Client: {}", request.getP2pListenHost());
+			throw new GEAuthenticationException("Invalid IP address. Client data inconsistent.");
+		}
 		Bytes pingInRlpBytes = RlpEncoderUtil.encodePingV1(request);
 		Hash calculatedHash = Hash.hash(pingInRlpBytes);
 

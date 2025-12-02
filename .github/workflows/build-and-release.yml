@@ -10,7 +10,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   # ==============================================================================
@@ -120,6 +119,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Lowercase IMAGE_NAME
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
@@ -146,12 +151,10 @@ jobs:
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
-
           build-args: |
             GITHUB_ACTOR=${{ github.actor }}
           secrets: |
             github_token=${{ secrets.GITHUB_TOKEN }}
-
           cache-from: type=gha,scope=build-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=build-${{ matrix.arch }}
 
@@ -180,6 +183,15 @@ jobs:
       packages: write
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Lowercase IMAGE_NAME
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
       - name: Download digests
         uses: actions/download-artifact@v4
         with:

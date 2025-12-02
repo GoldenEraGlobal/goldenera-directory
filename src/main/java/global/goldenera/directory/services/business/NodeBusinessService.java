@@ -130,7 +130,7 @@ public class NodeBusinessService {
 
 	private void validateVersion(String nodeVersion, long nodeHeight) {
 		if (Constants.shouldNodeShutdown(nodeHeight, nodeVersion)) {
-			log.warn("Node rejected due to version mismatch.");
+			log.warn("Node rejected due to version mismatch. NodeVersion: {}, NodeHeight: {}", nodeVersion, nodeHeight);
 			throw new GEAuthenticationException("Node tried to ping with software version code below minimum.");
 		}
 	}

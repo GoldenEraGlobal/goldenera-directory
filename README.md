@@ -35,15 +35,15 @@ services:
     ports:
       - "${LISTEN_PORT:-8080}:8080"
     volumes:
-      - ./directory_data:/app/data
-      - ${LOGGING_DIR:-./directory_logs}:/app/logs
+      - ./directory_data:/app/directory_data
+      - ${LOGGING_DIR:-./directory_logs}:/app/directory_logs
     deploy:
       resources:
         limits:
-          memory: 4G
+          memory: 1G
           cpus: "2.0"
         reservations:
-          memory: 2G
+          memory: 1G
 ```
 
 Create a `.env` file:

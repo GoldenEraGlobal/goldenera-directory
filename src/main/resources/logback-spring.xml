@@ -3,10 +3,10 @@
     <include resource="org/springframework/boot/logging/logback/defaults.xml" />
     <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
 
-    <property name="INTERNAL_LOG_PATH" value="/app/logs" />
+    <property name="INTERNAL_LOG_PATH" value="/app/directory_logs" />
 
     <springProperty scope="context" name="LOG_FILENAME" source="LOGGING_FILE"
-        defaultValue="node.log" />
+        defaultValue="directory.log" />
 
     <property name="FULL_LOG_FILE" value="${INTERNAL_LOG_PATH}/${LOG_FILENAME}" />
 

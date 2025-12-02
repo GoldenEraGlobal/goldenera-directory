@@ -34,30 +34,28 @@ RUN --mount=type=secret,id=github_token \
     ./mvnw clean package -DskipTests -s settings.xml
 
 # ==============================================================================
-# STAGE 2: Production Runtime (Java 21)
+# STAGE 2: Production Runtime
 # ==============================================================================
 FROM eclipse-temurin:21-jdk-jammy
 
 ENV APP_HOME=/app
-ENV APP_DATA_DIR=/app/data
+ENV APP_DATA_DIR=/app/directory_data
 
-# 1. User Setup
 RUN groupadd -r directory && useradd -r -g directory -d ${APP_HOME} -s /sbin/nologin directory
 
 WORKDIR ${APP_HOME}
 
-# 2. Copy Artifacts
 COPY --from=app-builder /app/target/*.jar ${APP_HOME}/app.jar
-COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# 3. Structure & Permissions (Initial setup)
 RUN mkdir -p ${APP_HOME}/overrides \
-    && mkdir -p ${APP_HOME}/logs \
-    && mkdir -p ${APP_HOME}/data \
+    && mkdir -p ${APP_HOME}/directory_logs \
+    && mkdir -p ${APP_HOME}/directory_data \
     && chown -R directory:directory ${APP_HOME}
 
 EXPOSE 8080 443 80
-VOLUME ["/app/data", "/app/logs"]
+
+VOLUME ["/app/directory_data", "/app/directory_logs"]
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

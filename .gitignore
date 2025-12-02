@@ -56,3 +56,4 @@ Thumbs.db
 /directory_logs
 .github_creds
 .temp_gh_token
+/local_test

@@ -46,7 +46,7 @@ RUN groupadd -r directory && useradd -r -g directory -d ${APP_HOME} -s /sbin/nol
 WORKDIR ${APP_HOME}
 
 COPY --from=app-builder /app/target/*.jar ${APP_HOME}/app.jar
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 RUN mkdir -p ${APP_HOME}/overrides \

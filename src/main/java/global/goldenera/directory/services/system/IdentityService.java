@@ -28,7 +28,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.apache.tuweni.bytes.Bytes;
 import org.springframework.stereotype.Service;
 
 import global.goldenera.cryptoj.datatypes.Address;
@@ -66,6 +65,10 @@ public class IdentityService {
 			} else {
 				log.info("No identity found. Generating new directory identity...");
 				tempMnemonic = PrivateKey.generateMnemonic();
+				Path parentDir = identityPath.getParent();
+				if (parentDir != null) {
+					Files.createDirectories(parentDir);
+				}
 				Files.writeString(identityPath, tempMnemonic);
 				log.info("New directory identity saved to: {}", identityPath.toAbsolutePath());
 			}

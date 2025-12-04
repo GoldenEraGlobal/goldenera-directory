@@ -78,7 +78,7 @@ public class NodeBusinessService {
 	}
 
 	public NodePongDtoV1 handlePing(NodePingDtoV1 request) {
-		if (!ValidatorUtil.IpAddress.isSafe(request.getP2pListenHost())) {
+		if (!ValidatorUtil.HostValidator.isSafe(request.getP2pListenHost())) {
 			log.warn("Invalid IP address for incoming ping. Client: {}", request.getP2pListenHost());
 			throw new GEAuthenticationException("Invalid IP address. Client data inconsistent.");
 		}

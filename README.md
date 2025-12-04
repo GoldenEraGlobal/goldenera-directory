@@ -52,31 +52,22 @@ Create a `.env` file:
 # Spring profile
 SPRING_PROFILES_ACTIVE="prod"
 
-# Directory URL
-LISTEN_URL="http://localhost"
+# Directory PORT
 LISTEN_PORT=8080
 
-# SSL
-SSL_ENABLED=false
-SSL_KEY_STORE=
-SSL_KEY_STORE_PASSWORD=
-SSL_FORCE_REDIRECT_TO_HTTPS=false
-
-# Directory identity file
+# Directory identity
 IDENTITY_FILE="./directory_data/.directory_identity"
 
-# Directory
+# Directory Settings
 MAX_REQUESTS_PER_IP_ADDRESS_PER_MINUTE=10
 DELETE_INACTIVE_NODE_AFTER_SECONDS=60
 
-# Admin area
+# Admin (Change this!)
 ADMIN_ACCESS_TOKEN="abc123"
 
 # Logging
 LOGGING_DIR="./directory_logs"
 LOGGING_FILE="goldenera.log"
-
-# Logging level
 LOGGING_LEVEL_ROOT=INFO
 LOGGING_LEVEL_GLOBAL_GOLDENERA=INFO
 ```

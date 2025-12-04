@@ -27,11 +27,14 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 import global.goldenera.directory.properties.PropertiesGeneralConfig;
 import io.github.bucket4j.Bucket;
@@ -55,7 +58,11 @@ public class ThrottlingFilter implements Filter {
 
 	PropertiesGeneralConfig propertiesGeneralConfig;
 
-	Map<String, Bucket> ipBuckets = new ConcurrentHashMap<>();
+	final Map<String, Bucket> ipBuckets = Caffeine.newBuilder()
+			.expireAfterAccess(1, TimeUnit.HOURS)
+			.maximumSize(10_000)
+			.<String, Bucket>build()
+			.asMap();
 
 	private Bucket createNewBucket() {
 		return Bucket.builder()

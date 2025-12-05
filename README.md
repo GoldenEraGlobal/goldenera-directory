@@ -6,6 +6,7 @@ Each node pings this directory server to register itself. The directory server s
 
 ---
 
+
 ## Prerequisites
 
 1. **Install Docker**: https://www.docker.com/

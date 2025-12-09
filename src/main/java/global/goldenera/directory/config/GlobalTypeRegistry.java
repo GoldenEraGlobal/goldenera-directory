@@ -25,7 +25,6 @@ package global.goldenera.directory.config;
 
 import java.math.BigInteger;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 
 import org.apache.tuweni.bytes.Bytes;
@@ -35,24 +34,10 @@ import org.apache.tuweni.units.ethereum.Wei;
 import global.goldenera.cryptoj.datatypes.Address;
 import global.goldenera.cryptoj.datatypes.Hash;
 import global.goldenera.cryptoj.datatypes.Signature;
-import global.goldenera.cryptoj.enums.BipVoteType;
-import global.goldenera.cryptoj.enums.BlockVersion;
-import global.goldenera.cryptoj.enums.Network;
-import global.goldenera.cryptoj.enums.TxPayloadType;
-import global.goldenera.cryptoj.enums.TxType;
-import global.goldenera.cryptoj.enums.TxVersion;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 public class GlobalTypeRegistry {
-
-        public static final Set<Class<? extends Enum<?>>> CODE_ENUMS = Set.of(
-                        BipVoteType.class,
-                        BlockVersion.class,
-                        TxVersion.class,
-                        Network.class,
-                        TxPayloadType.class,
-                        TxType.class);
 
         @Getter
         @RequiredArgsConstructor

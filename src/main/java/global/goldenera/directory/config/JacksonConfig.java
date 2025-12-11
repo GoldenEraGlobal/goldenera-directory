@@ -169,42 +169,4 @@ public class JacksonConfig {
             }
         });
     }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void registerReflectionEnum(SimpleModule module, Class enumClass) {
-        try {
-            Method getCodeMethod = enumClass.getMethod("getCode");
-            Method fromCodeMethod = enumClass.getMethod("fromCode", int.class);
-
-            module.addSerializer(enumClass, new JsonSerializer() {
-                @Override
-                public void serialize(Object value, JsonGenerator gen, SerializerProvider s) throws IOException {
-                    try {
-                        if (value == null)
-                            gen.writeNull();
-                        else
-                            gen.writeNumber((int) getCodeMethod.invoke(value));
-                    } catch (Exception e) {
-                        gen.writeNull();
-                    }
-                }
-            });
-
-            module.addDeserializer(enumClass, new JsonDeserializer() {
-                @Override
-                public Object deserialize(JsonParser p, DeserializationContext c) throws IOException {
-                    if (p.getCurrentToken() == JsonToken.VALUE_NULL)
-                        return null;
-                    try {
-                        return fromCodeMethod.invoke(null, p.getValueAsInt());
-                    } catch (Exception e) {
-                        return null;
-                    }
-                }
-            });
-
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException("Error with registering enum: " + enumClass.getSimpleName(), e);
-        }
-    }
 }

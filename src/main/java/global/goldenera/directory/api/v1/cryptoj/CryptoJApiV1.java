@@ -54,6 +54,7 @@ import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxDto;
 import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipAddressAliasAddDto;
 import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipAddressAliasRemoveDto;
 import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipAddressAuthorityAddRemoveDto;
+import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipAddressValidatorAddRemoveDto;
 import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipNetworkParamsSetDto;
 import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipTokenBurnDto;
 import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipTokenCreateDto;
@@ -235,6 +236,65 @@ public class CryptoJApiV1 {
                                         .sign(privateKey);
                         return CryptoJTxDto.builder()
                                         .rawTxDataInHex(TxEncoder.INSTANCE.encode(authorityRemoveTx, true)
+                                                        .toHexString())
+                                        .build();
+                } catch (CryptoJException e) {
+                        throw new GERuntimeException(e.getMessage());
+                }
+        }
+
+        @PostMapping("generate-tx/bip/validator/add")
+        public CryptoJTxDto generateTxBipValidatorAdd(@RequestBody CryptoJTxInBipAddressValidatorAddRemoveDto input) {
+                Network network = input.getNetwork();
+                PrivateKey privateKey = PrivateKey.wrap(Bytes.fromHexString(input.getPrivateKeyHex()));
+                Wei fee = Amounts.tokensWithDecimals(input.getFee(), Amounts.STANDARD_DECIMALS);
+                Long nonce = input.getNonce();
+                Bytes message = input.getMessage() == null ? null
+                                : Bytes.wrap(input.getMessage().getBytes(StandardCharsets.UTF_8));
+                Address address = Address.fromHexString(input.getAddress());
+
+                try {
+                        Tx validatorAddTx = TxBuilder.create()
+                                        .addValidator()
+                                        .validator(address)
+                                        .done()
+                                        .network(network)
+                                        .nonce(nonce)
+                                        .fee(fee)
+                                        .message(message)
+                                        .sign(privateKey);
+                        return CryptoJTxDto.builder()
+                                        .rawTxDataInHex(TxEncoder.INSTANCE.encode(validatorAddTx, true)
+                                                        .toHexString())
+                                        .build();
+                } catch (CryptoJException e) {
+                        throw new GERuntimeException(e.getMessage());
+                }
+        }
+
+        @PostMapping("generate-tx/bip/validator/remove")
+        public CryptoJTxDto generateTxBipValidatorRemove(
+                        @RequestBody CryptoJTxInBipAddressValidatorAddRemoveDto input) {
+                Network network = input.getNetwork();
+                PrivateKey privateKey = PrivateKey.wrap(Bytes.fromHexString(input.getPrivateKeyHex()));
+                Wei fee = Amounts.tokensWithDecimals(input.getFee(), Amounts.STANDARD_DECIMALS);
+                Long nonce = input.getNonce();
+                Bytes message = input.getMessage() == null ? null
+                                : Bytes.wrap(input.getMessage().getBytes(StandardCharsets.UTF_8));
+                Address address = Address.fromHexString(input.getAddress());
+
+                try {
+                        Tx validatorRemoveTx = TxBuilder.create()
+                                        .removeValidator()
+                                        .validator(address)
+                                        .done()
+                                        .network(network)
+                                        .nonce(nonce)
+                                        .fee(fee)
+                                        .message(message)
+                                        .sign(privateKey);
+                        return CryptoJTxDto.builder()
+                                        .rawTxDataInHex(TxEncoder.INSTANCE.encode(validatorRemoveTx, true)
                                                         .toHexString())
                                         .build();
                 } catch (CryptoJException e) {

@@ -363,7 +363,8 @@ public class CryptoJApiV1 {
                 int numberOfDecimals = input.getNumberOfDecimals();
                 String websiteUrl = input.getWebsiteUrl();
                 String logoUrl = input.getLogoUrl();
-                BigInteger maxSupply = input.getMaxSupply() == null ? null : new BigInteger(input.getMaxSupply());
+                BigInteger maxSupply = input.getMaxSupply() == null ? null
+                                : Amounts.tokensWithDecimals(input.getMaxSupply(), numberOfDecimals).toBigInteger();
                 boolean userBurnable = input.isUserBurnable();
 
                 try {

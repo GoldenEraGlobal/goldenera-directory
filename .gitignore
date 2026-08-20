@@ -57,3 +57,8 @@ Thumbs.db
 .github_creds
 .temp_gh_token
 /local_test
+._*
+.agents
+.zed
+CLAUDE.md
+AGENTS.md

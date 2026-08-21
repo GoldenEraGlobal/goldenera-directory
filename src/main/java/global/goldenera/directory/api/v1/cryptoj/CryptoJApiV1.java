@@ -39,11 +39,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import global.goldenera.cryptoj.builder.TxBuilder;
 import global.goldenera.cryptoj.builder.payloads.BipVoteBuilder;
+import global.goldenera.cryptoj.builder.payloads.NetworkParamsBuilder;
 import global.goldenera.cryptoj.common.Tx;
 import global.goldenera.cryptoj.datatypes.Address;
 import global.goldenera.cryptoj.datatypes.Hash;
 import global.goldenera.cryptoj.datatypes.PrivateKey;
 import global.goldenera.cryptoj.enums.BipVoteType;
+import global.goldenera.cryptoj.enums.MiningLimitMode;
 import global.goldenera.cryptoj.enums.Network;
 import global.goldenera.cryptoj.enums.TxType;
 import global.goldenera.cryptoj.exceptions.CryptoJException;
@@ -54,8 +56,10 @@ import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxDto;
 import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipAddressAliasAddDto;
 import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipAddressAliasRemoveDto;
 import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipAddressAuthorityAddRemoveDto;
-import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipAddressValidatorAddRemoveDto;
+import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipValidatorRemoveDto;
 import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipNetworkParamsSetDto;
+import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipValidatorAddDto;
+import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipValidatorMiningPolicySetDto;
 import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipTokenBurnDto;
 import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipTokenCreateDto;
 import global.goldenera.directory.api.v1.cryptoj.dtos.CryptoJTxInBipTokenMintDto;
@@ -244,7 +248,7 @@ public class CryptoJApiV1 {
         }
 
         @PostMapping("generate-tx/bip/validator/add")
-        public CryptoJTxDto generateTxBipValidatorAdd(@RequestBody CryptoJTxInBipAddressValidatorAddRemoveDto input) {
+        public CryptoJTxDto generateTxBipValidatorAdd(@RequestBody CryptoJTxInBipValidatorAddDto input) {
                 Network network = input.getNetwork();
                 PrivateKey privateKey = PrivateKey.wrap(Bytes.fromHexString(input.getPrivateKeyHex()));
                 Wei fee = Amounts.tokensWithDecimals(input.getFee(), Amounts.STANDARD_DECIMALS);
@@ -257,6 +261,7 @@ public class CryptoJApiV1 {
                         Tx validatorAddTx = TxBuilder.create()
                                         .addValidator()
                                         .validator(address)
+                                        .miningPolicy(input.getMiningLimitMode(), input.getMaxMiningShareBps())
                                         .done()
                                         .network(network)
                                         .nonce(nonce)
@@ -272,9 +277,41 @@ public class CryptoJApiV1 {
                 }
         }
 
+        @PostMapping("generate-tx/bip/validator/mining-policy/set")
+        public CryptoJTxDto generateTxBipValidatorMiningPolicySet(
+                        @RequestBody CryptoJTxInBipValidatorMiningPolicySetDto input) {
+                Network network = input.getNetwork();
+                PrivateKey privateKey = PrivateKey.wrap(Bytes.fromHexString(input.getPrivateKeyHex()));
+                Wei fee = Amounts.tokensWithDecimals(input.getFee(), Amounts.STANDARD_DECIMALS);
+                Long nonce = input.getNonce();
+                Bytes message = input.getMessage() == null ? null
+                                : Bytes.wrap(input.getMessage().getBytes(StandardCharsets.UTF_8));
+                Address validatorAddress = Address.fromHexString(input.getValidatorAddress());
+                MiningLimitMode miningLimitMode = input.getMiningLimitMode();
+
+                try {
+                        Tx validatorMiningPolicySetTx = TxBuilder.create()
+                                        .setValidatorMiningPolicy()
+                                        .validator(validatorAddress)
+                                        .miningPolicy(miningLimitMode, input.getMaxMiningShareBps())
+                                        .done()
+                                        .network(network)
+                                        .nonce(nonce)
+                                        .fee(fee)
+                                        .message(message)
+                                        .sign(privateKey);
+                        return CryptoJTxDto.builder()
+                                        .rawTxDataInHex(TxEncoder.INSTANCE.encode(validatorMiningPolicySetTx, true)
+                                                        .toHexString())
+                                        .build();
+                } catch (CryptoJException e) {
+                        throw new GERuntimeException(e.getMessage());
+                }
+        }
+
         @PostMapping("generate-tx/bip/validator/remove")
         public CryptoJTxDto generateTxBipValidatorRemove(
-                        @RequestBody CryptoJTxInBipAddressValidatorAddRemoveDto input) {
+                        @RequestBody CryptoJTxInBipValidatorRemoveDto input) {
                 Network network = input.getNetwork();
                 PrivateKey privateKey = PrivateKey.wrap(Bytes.fromHexString(input.getPrivateKeyHex()));
                 Wei fee = Amounts.tokensWithDecimals(input.getFee(), Amounts.STANDARD_DECIMALS);
@@ -324,8 +361,7 @@ public class CryptoJApiV1 {
                 Wei minTxByteFee = input.getMinTxByteFee() == null ? null
                                 : Amounts.tokensWithDecimals(input.getMinTxByteFee(), Amounts.STANDARD_DECIMALS);
 
-                try {
-                        Tx networkParamsSetTx = TxBuilder.create()
+                NetworkParamsBuilder networkParamsBuilder = TxBuilder.create()
                                         .setNetworkParams()
                                         .blockReward(blockReward)
                                         .blockRewardPoolAddress(blockRewardPoolAddress)
@@ -333,8 +369,16 @@ public class CryptoJApiV1 {
                                         .asertHalfLife(asertHalfLifeBlocks)
                                         .minDifficulty(minDifficulty)
                                         .minTxBaseFee(minTxBaseFee)
-                                        .minTxByteFee(minTxByteFee)
-                                        .done()
+                                        .minTxByteFee(minTxByteFee);
+                if (input.getValidatorMiningWindowBlocks() != null) {
+                        networkParamsBuilder.validatorMiningWindowBlocks(input.getValidatorMiningWindowBlocks());
+                }
+                if (input.getMiningRewardVestingBlocks() != null) {
+                        networkParamsBuilder.miningRewardVestingBlocks(input.getMiningRewardVestingBlocks());
+                }
+
+                try {
+                        Tx networkParamsSetTx = networkParamsBuilder.done()
                                         .network(network)
                                         .nonce(nonce)
                                         .fee(fee)

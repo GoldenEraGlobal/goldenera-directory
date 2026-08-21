@@ -13,7 +13,7 @@
 
     <groupId>global.goldenera.directory</groupId>
     <artifactId>goldenera-directory</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
     <name>goldenera-directory</name>
 
     <properties>

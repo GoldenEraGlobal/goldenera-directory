@@ -24,46 +24,46 @@
 package global.goldenera.directory;
 
 import java.lang.module.ModuleDescriptor.Version;
+import java.util.List;
 import java.util.Map;
 
+import global.goldenera.cryptoj.enums.Network;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class Constants {
 
-    // Fork config
-    public static final Map<ForkName, Long> FORK_ACTIVATION_BLOCKS = Map.of(ForkName.GENESIS, 0L);
-    public static final Map<ForkName, String> REQUIRED_SOFTWARE_VERSION_FOR_FORK = Map.of(ForkName.GENESIS, "0.0.1");
+    public static final Map<Network, List<SoftwareVersionPolicy>> SOFTWARE_VERSION_POLICIES = Map.of(
+            Network.MAINNET, List.of(
+                    new SoftwareVersionPolicy(0L, "0.0.1"),
+                    new SoftwareVersionPolicy(731_503L, "0.1.1")),
+            Network.TESTNET, List.of(
+                    new SoftwareVersionPolicy(0L, "0.0.1"),
+                    new SoftwareVersionPolicy(716_824L, "0.1.1")));
 
-    public enum ForkName {
-        GENESIS;
-    }
-
-    public static boolean isForkActive(ForkName fork, long blockHeight) {
-        Long activationHeight = FORK_ACTIVATION_BLOCKS.get(fork);
-        if (activationHeight == null) {
-            return false;
+    public static String requiredSoftwareVersion(Network network, long nodeHeight) {
+        List<SoftwareVersionPolicy> policies = SOFTWARE_VERSION_POLICIES.get(network);
+        if (policies == null || nodeHeight < 0) {
+            throw new IllegalArgumentException("No software version policy configured for network: " + network);
         }
-        return blockHeight >= activationHeight;
+        return policies.stream()
+                .filter(policy -> nodeHeight >= policy.activationHeight())
+                .reduce((previous, current) -> current)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No active software version policy for network " + network + " at height " + nodeHeight))
+                .requiredVersion();
     }
 
-    public static boolean shouldNodeShutdown(long nodeHeight, String nodeVersionStr) {
+    public static boolean shouldRejectNodeVersion(Network network, long nodeHeight, String nodeVersionStr) {
         try {
             Version nodeVersion = Version.parse(nodeVersionStr);
-            for (ForkName fork : ForkName.values()) {
-                if (isForkActive(fork, nodeHeight)) {
-                    String requiredVersionStr = REQUIRED_SOFTWARE_VERSION_FOR_FORK.get(fork);
-                    if (requiredVersionStr != null) {
-                        Version requiredVersion = Version.parse(requiredVersionStr);
-                        if (nodeVersion.compareTo(requiredVersion) < 0) {
-                            return true;
-                        }
-                    }
-                }
-            }
+            Version requiredVersion = Version.parse(requiredSoftwareVersion(network, nodeHeight));
+            return nodeVersion.compareTo(requiredVersion) < 0;
         } catch (Exception e) {
             return true;
         }
-        return false;
+    }
+
+    public record SoftwareVersionPolicy(long activationHeight, String requiredVersion) {
     }
 }

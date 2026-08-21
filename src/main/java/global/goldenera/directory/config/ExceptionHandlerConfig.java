@@ -30,11 +30,13 @@ import global.goldenera.directory.exceptions.GEAuthenticationException;
 import global.goldenera.directory.exceptions.GEFailedException;
 import global.goldenera.directory.exceptions.GENotFoundException;
 import global.goldenera.directory.exceptions.GEValidationException;
+import global.goldenera.directory.exceptions.NodeVersionUnsupportedException;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -60,6 +62,19 @@ import static lombok.AccessLevel.PRIVATE;
 public class ExceptionHandlerConfig {
 
     // region Custom Exceptions
+
+    @ResponseBody
+    @ExceptionHandler(NodeVersionUnsupportedException.class)
+    ResponseEntity<NodeVersionErrorResponse> handleNodeVersionUnsupportedException(
+            @NonNull NodeVersionUnsupportedException ex) {
+        NodeVersionErrorResponse response = new NodeVersionErrorResponse(
+                "NODE_VERSION_UNSUPPORTED",
+                ex.getMessage(),
+                ex.getNetwork().name(),
+                ex.getCurrentVersion(),
+                ex.getMinimumVersion());
+        return ResponseEntity.status(HttpStatus.UPGRADE_REQUIRED).body(response);
+    }
 
     @ResponseBody
     @ExceptionHandler(CryptoJFailedException.class)
@@ -204,6 +219,10 @@ public class ExceptionHandlerConfig {
 
     String wrapToJson(String message) {
         return "{\"message\":\"" + message + "\"}";
+    }
+
+    record NodeVersionErrorResponse(String code, String message, String network,
+            String currentVersion, String minimumVersion) {
     }
 
     // endregion

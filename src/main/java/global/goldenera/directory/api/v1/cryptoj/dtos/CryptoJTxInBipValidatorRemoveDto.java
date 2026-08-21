@@ -32,7 +32,7 @@ import lombok.extern.jackson.Jacksonized;
 @Value
 @Builder
 @Jacksonized
-public class CryptoJTxInBipNetworkParamsSetDto {
+public class CryptoJTxInBipValidatorRemoveDto {
     @NonNull
     Network network;
     @NonNull
@@ -43,13 +43,6 @@ public class CryptoJTxInBipNetworkParamsSetDto {
     String fee;
     String message;
 
-    String blockReward;
-    String blockRewardPoolAddress;
-    Long targetMiningTimeMs;
-    Long asertHalfLifeBlocks;
-    String minDifficulty;
-    String minTxBaseFee;
-    String minTxByteFee;
-    Long validatorMiningWindowBlocks;
-    Long miningRewardVestingBlocks;
+    @NonNull
+    String address;
 }

@@ -23,6 +23,7 @@
  */
 package global.goldenera.directory.api.v1.cryptoj.dtos;
 
+import global.goldenera.cryptoj.enums.MiningLimitMode;
 import global.goldenera.cryptoj.enums.Network;
 import lombok.Builder;
 import lombok.NonNull;
@@ -32,7 +33,7 @@ import lombok.extern.jackson.Jacksonized;
 @Value
 @Builder
 @Jacksonized
-public class CryptoJTxInBipAddressValidatorAddRemoveDto {
+public class CryptoJTxInBipValidatorAddDto {
     @NonNull
     Network network;
     @NonNull
@@ -45,4 +46,8 @@ public class CryptoJTxInBipAddressValidatorAddRemoveDto {
 
     @NonNull
     String address;
+    @NonNull
+    MiningLimitMode miningLimitMode;
+    @NonNull
+    Long maxMiningShareBps;
 }

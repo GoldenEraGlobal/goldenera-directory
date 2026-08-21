@@ -39,6 +39,7 @@ import global.goldenera.directory.api.v1.node.dtos.NodePingDtoV1;
 import global.goldenera.directory.api.v1.node.dtos.NodePongDtoV1;
 import global.goldenera.directory.api.v1.node.dtos.NodePongPayloadDtoV1;
 import global.goldenera.directory.exceptions.GEAuthenticationException;
+import global.goldenera.directory.exceptions.NodeVersionUnsupportedException;
 import global.goldenera.directory.exceptions.GEValidationException;
 import global.goldenera.directory.properties.PropertiesGeneralConfig;
 import global.goldenera.directory.services.system.IdentityService;
@@ -102,7 +103,7 @@ public class NodeBusinessService {
 		}
 
 		validateTimestamp(request.getTimestamp());
-		validateVersion(request.getSoftwareVersion(), request.getHeadHeight());
+		validateVersion(request.getNetwork(), request.getHeadHeight(), request.getSoftwareVersion());
 
 		activeNodeCache.put(nodeIdentity,
 				new NodeInfo(
@@ -128,10 +129,12 @@ public class NodeBusinessService {
 		}
 	}
 
-	private void validateVersion(String nodeVersion, long nodeHeight) {
-		if (Constants.shouldNodeShutdown(nodeHeight, nodeVersion)) {
-			log.warn("Node rejected due to version mismatch. NodeVersion: {}, NodeHeight: {}", nodeVersion, nodeHeight);
-			throw new GEAuthenticationException("Node tried to ping with software version code below minimum.");
+	private void validateVersion(Network network, long nodeHeight, String nodeVersion) {
+		if (Constants.shouldRejectNodeVersion(network, nodeHeight, nodeVersion)) {
+			String requiredVersion = Constants.requiredSoftwareVersion(network, nodeHeight);
+			log.warn("Node rejected due to version mismatch. Network: {}, NodeHeight: {}, NodeVersion: {}, RequiredVersion: {}",
+					network, nodeHeight, nodeVersion, requiredVersion);
+			throw new NodeVersionUnsupportedException(network, nodeVersion, requiredVersion);
 		}
 	}
 
